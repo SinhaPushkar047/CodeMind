@@ -1,0 +1,25 @@
+langchain
+langchain-core
+langchain-classic
+sentence-transformers
+GithubFileLoader
+langchain-community
+
+langchain-nvidia-ai-endpoints
+
+langchain-google-genai
+google-generativeai
+
+langchain_groq
+
+python-dotenv
+
+pydantic
+
+jupyter ipykernel
+
+langsmith
+
+fastapi 
+
+uvicorn[standard]
