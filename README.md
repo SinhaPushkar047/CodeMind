@@ -1,5 +1,11 @@
 # 🧠 CodeMind — Your AI-Powered Codebase Assistant
 
+## 🚀 Live Demo
+
+**Try CodeMind here:** [🌐 CodeMind – Live Website](https://codemind-frontend-iota.vercel.app/)
+
+Explore the deployed application directly in your browser!
+
 > **Understand code. Explore repositories. Ask better questions. Build smarter.**
 
 CodeMind is an AI-powered codebase assistant designed to help developers explore GitHub repositories and understand code through natural-language conversations. Instead of manually searching through files, you can ask questions and let retrieval-augmented generation (RAG) bring relevant code context to the conversation.
