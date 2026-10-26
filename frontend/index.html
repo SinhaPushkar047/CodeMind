@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>CodeMind — Chat with your codebase</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--panel:#11182a;--line:#26334c;--muted:#94a3b8;--text:#edf3ff;--accent:#8b7cff;--mint:#5ce1c0}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0%,#1a2450 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;height:100dvh}
+    button,input{font:inherit}button{cursor:pointer}.app{height:100%;display:grid;grid-template-columns:290px 1fr;max-width:1600px;margin:auto;padding:16px;gap:16px}
+    aside,.main{border:1px solid var(--line);border-radius:20px;background:rgba(17,24,42,.94);min-height:0}.sidebar{padding:22px 18px;display:flex;flex-direction:column;gap:24px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:20px}.logo{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,var(--accent),#5e9cff);font-weight:900}
+    .tag{font-size:10px;color:var(--mint);border:1px solid #286c65;padding:3px 7px;border-radius:20px;margin-left:auto;letter-spacing:1px}
+    .label{font-size:11px;font-weight:800;color:#9caec9;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}.field{width:100%;background:#0b1222;border:1px solid #2b3954;border-radius:11px;padding:12px;color:var(--text);outline:none;min-width:0}.field:focus{border-color:var(--accent)}
+    .connect-row{display:flex;flex-direction:column;gap:9px}.hint{font-size:12px;color:var(--muted);margin:8px 1px 12px}.primary{width:100%;border:0;border-radius:11px;padding:12px 14px;color:white;font-weight:750;background:linear-gradient(110deg,#8270ff,#647fff)}.primary:disabled{opacity:.55;cursor:wait}
+    .status{display:flex;align-items:flex-start;gap:9px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0d1424;font-size:12px;color:var(--muted);overflow-wrap:anywhere}.dot{width:8px;height:8px;border-radius:50%;background:#64748b;flex:none;margin-top:5px}.dot.ok{background:var(--mint);box-shadow:0 0 12px #5ce1c077}.side-bottom{margin-top:auto;color:#71819c;font-size:12px}.side-bottom b{color:#aab7cd}
+    .main{display:flex;flex-direction:column;overflow:hidden}.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);gap:12px}.top-title{font-weight:750;font-size:16px}.top-sub{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}.pill{border:1px solid #2c3a54;background:#10192a;color:#a9b8d1;padding:6px 10px;border-radius:30px;font-size:11px;white-space:nowrap}
+    .messages{flex:1;overflow:auto;padding:28px clamp(16px,5vw,72px);display:flex;flex-direction:column;gap:22px;scroll-behavior:smooth}.welcome{margin:auto;max-width:590px;text-align:center;padding:24px 0}.welcome-icon{width:68px;height:68px;border-radius:22px;background:#8b7cff25;border:1px solid #655dff66;display:grid;place-items:center;margin:0 auto 20px;font-size:30px}.welcome h1{font-size:clamp(26px,4vw,39px);letter-spacing:-1.5px;line-height:1.15;margin:0 0 12px}.gradient{background:linear-gradient(90deg,#b3a7ff,#6fe6d1);background-clip:text;color:transparent}.welcome p{color:var(--muted);max-width:460px;margin:0 auto 24px}.suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left}.suggestion{background:#121c30;border:1px solid #293752;border-radius:12px;color:#cbd7ec;padding:13px;font-size:12px;text-align:left}.suggestion:hover{border-color:#8072ed}.suggestion strong{display:block;color:#f0f4ff;font-size:13px;margin-bottom:4px}
+    .message{display:flex;gap:11px;max-width:850px;width:100%;align-self:flex-start}.message.user{align-self:flex-end;flex-direction:row-reverse}.avatar{width:32px;height:32px;border:1px solid #34415b;border-radius:11px;background:#1b2740;display:grid;place-items:center;flex:none;font-size:12px}.message.assistant .avatar{color:#b4aaff}.message.user .avatar{background:#554ac1;border-color:#7469ed}.bubble{padding:13px 16px;border-radius:4px 15px 15px 15px;background:#151f33;border:1px solid #293751;max-width:calc(100% - 43px);overflow-wrap:anywhere;white-space:pre-wrap}.user .bubble{background:#292653;border-color:#49427e;border-radius:15px 4px 15px 15px}.bubble p{margin:0 0 9px}.bubble p:last-child{margin-bottom:0}.bubble code{font-family:ui-monospace,Consolas,monospace;background:#0a1120;border:1px solid #2b3954;padding:2px 5px;border-radius:5px;font-size:.9em}.bubble pre{white-space:pre;overflow:auto;background:#080e1a;border:1px solid #2b3954;border-radius:9px;padding:14px;margin:10px 0}.bubble h1,.bubble h2,.bubble h3{line-height:1.3;margin:18px 0 8px;color:#f1f4ff}.bubble h1{font-size:1.35rem}.bubble h2{font-size:1.18rem;border-bottom:1px solid #2b3954;padding-bottom:6px}.bubble h3{font-size:1.05rem}.bubble ul,.bubble ol{padding-left:23px;margin:8px 0 13px}.bubble li{margin:5px 0}.bubble hr{border:0;border-top:1px solid #34415d;margin:16px 0}.bubble table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px;display:block;overflow-x:auto}.bubble th,.bubble td{border:1px solid #34415d;padding:8px 10px;text-align:left;vertical-align:top}.bubble th{background:#202b43;color:#f1f4ff}.bubble td{background:#111a2c}.bubble strong{color:#f7f8ff}.bubble blockquote{border-left:3px solid #8270ff;margin:10px 0;padding:4px 12px;color:#b8c6dd}.typing{color:var(--muted);font-size:13px}
+    .composer-wrap{padding:14px clamp(14px,5vw,72px) 20px;border-top:1px solid var(--line);background:#101728}.composer{display:flex;gap:10px;align-items:flex-end;border:1px solid #34415d;background:#0b1222;border-radius:16px;padding:8px}.composer:focus-within{border-color:#8270ff}.composer input{min-width:0;flex:1;background:transparent;border:0;outline:none;color:var(--text);padding:10px 7px}.send{width:42px;height:42px;border:0;border-radius:11px;background:#8270ff;color:white;flex:none}.send:disabled{opacity:.4;cursor:not-allowed}.footnote{text-align:center;font-size:11px;color:#73819a;margin-top:10px}.toast{color:#ffb8bd;font-size:12px;margin-top:9px;min-height:16px;overflow-wrap:anywhere}
+    @media(max-width:760px){body{height:auto;min-height:100dvh}.app{grid-template-columns:1fr;padding:8px;gap:8px;height:100dvh}.sidebar{padding:14px;gap:13px}.brand{font-size:18px}.connect-row{display:grid;grid-template-columns:1fr auto}.connect-row .primary{width:auto;white-space:nowrap}.hint{margin-bottom:0}.status{padding:9px}.side-bottom{display:none}.main{min-height:0}.topbar{padding:13px 16px}.messages{padding:20px 12px}.welcome{padding:10px 0}.suggestions{grid-template-columns:1fr}.suggestion:nth-child(n+3){display:none}.composer-wrap{padding:12px}.messages{gap:16px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">⌘</div>CodeMind <span class="tag">BETA</span></div>
+    <section>
+      <div class="label">Connect a repository</div>
+      <div class="connect-row">
+        <input id="repo" class="field" type="text" placeholder="https://github.com/owner/repo" autocomplete="url">
+        <button id="connect" class="primary" type="button">Connect</button>
+      </div>
+      <div class="hint">Paste a GitHub repository URL or owner/repo. CodeMind will index its files.</div>
+    </section>
+    <div id="status" class="status"><span id="statusDot" class="dot"></span><span id="statusText">No repository connected yet.</span></div>
+    <div class="side-bottom"><b>CodeMind AI</b><br>Understand code. Ask better questions.</div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="top-title">Repository assistant</div><div id="repoLabel" class="top-sub">Connect a repository to get started</div></div><span class="pill">✦ AI CHAT</span></header>
+    <div id="messages" class="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">✧</div>
+        <h1>Your codebase,<br><span class="gradient">understood.</span></h1>
+        <p>Connect a GitHub repository and ask about its architecture, functions, dependencies, and how everything works.</p>
+        <div class="suggestions">
+          <button class="suggestion" data-q="Explain the overall architecture of this repository."><strong>⌘ Understand the code</strong>Explain the overall architecture</button>
+          <button class="suggestion" data-q="What are the most important files and what does each do?"><strong>▤ Explore key files</strong>Find important files and their purpose</button>
+          <button class="suggestion" data-q="Trace the main execution flow through this project."><strong>↗ Trace execution</strong>Follow the main execution flow</button>
+          <button class="suggestion" data-q="Identify potential bugs or areas for improvement in this codebase."><strong>⌁ Review the code</strong>Find potential issues and improvements</button>
+        </div>
+      </div>
+    </div>
+    <div class="composer-wrap">
+      <form id="chatForm" class="composer"><input id="question" placeholder="Connect a repository before asking a question…" autocomplete="off" disabled><button id="send" class="send" type="submit" aria-label="Send message" disabled>➤</button></form>
+      <div id="toast" class="toast" role="status"></div><div class="footnote">AI can make mistakes. Verify important code suggestions before using them.</div>
+    </div>
+  </main>
+</div>
+<script>
+  // Local development: keep FastAPI running at http://127.0.0.1:8000.
+  // For deployment, replace this with your deployed FastAPI URL.
+  const sessionId = Math.random().toString(36).substring(2, 15);
+  const API_BASE = "http://127.0.0.1:8000";
+  const $ = (id) => document.getElementById(id);
+  let connected = false;
+  let busy = false;
+  const messages = $("messages");
+
+  function setStatus(text, ok = false) {
+    $("statusText").textContent = text;
+    $("statusDot").className = "dot" + (ok ? " ok" : "");
+  }
+  function setBusy(value) {
+    busy = value;
+    $("connect").disabled = value;
+    $("question").disabled = value || !connected;
+    $("send").disabled = value || !connected || !$("question").value.trim();
+  }
+  function showToast(message = "") { $("toast").textContent = message; }
+
+  // Converts a full GitHub URL into "owner/repository".
+  // Also accepts "owner/repository" directly.
+  function normalizeRepo(raw) {
+    const value = raw.trim();
+    if (!value) throw new Error("Paste a GitHub repository URL first.");
+
+    if (/^[\w.-]+\/[\w.-]+$/.test(value)) return value.replace(/\.git$/i, "");
+
+    let url;
+    try {
+      url = new URL(value);
+    } catch {
+      throw new Error("Enter a valid URL, such as https://github.com/owner/repo");
+    }
+
+    if (url.hostname.toLowerCase() !== "github.com") {
+      throw new Error("Please enter a URL from github.com.");
+    }
+
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) {
+      throw new Error("The URL must include both the repository owner and name.");
+    }
+
+    const owner = parts[0];
+    const repository = parts[1].replace(/\.git$/i, "");
+    if (!/^[\w.-]+$/.test(owner) || !/^[\w.-]+$/.test(repository)) {
+      throw new Error("That doesn't look like a valid GitHub repository URL.");
+    }
+    return `${owner}/${repository}`;
+  }
+
+  async function api(path, params) {
+    const url = new URL(API_BASE + path);
+    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+    const response = await fetch(url, { method: "GET" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || data.message || `API error (${response.status})`);
+    return data;
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, char => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[char]));
+  }
+  function formatAnswer(text) {
+    // Lightweight Markdown renderer for headings, lists, tables and code.
+    // Escape all model text first so generated HTML cannot execute in the page.
+    let source = String(text ?? "").replace(/\r\n?/g, "\n");
+    const codeBlocks = [];
+    source = source.replace(/```([\w+-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      const token = `@@CODEBLOCK${codeBlocks.length}@@`;
+      codeBlocks.push(`<pre><code>${escapeHtml(code.replace(/\n$/, ""))}</code></pre>`);
+      return token;
+    });
+
+    const lines = escapeHtml(source).split("\n");
+    const out = [];
+    let paragraph = [], listType = null, listItems = [], tableRows = [];
+
+    const inline = value => value
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(.+?)__/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/_(.+?)_/g, "<em>$1</em>");
+    const flushParagraph = () => {
+      if (paragraph.length) { out.push(`<p>${inline(paragraph.join("<br>"))}</p>`); paragraph = []; }
+    };
+    const flushList = () => {
+      if (!listType) return;
+      out.push(`<${listType}>${listItems.map(item => `<li>${inline(item)}</li>`).join("")}</${listType}>`);
+      listType = null; listItems = [];
+    };
+    const flushTable = () => {
+      if (!tableRows.length) return;
+      const rows = tableRows.filter(row => !/^\s*\|?\s*:?-{3,}/.test(row));
+      if (rows.length) {
+        const cells = row => row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
+        const header = cells(rows[0]);
+        let table = `<table><thead><tr>${header.map(cell => `<th>${inline(cell)}</th>`).join("")}</tr></thead><tbody>`;
+        rows.slice(1).forEach(row => { table += `<tr>${cells(row).map(cell => `<td>${inline(cell)}</td>`).join("")}</tr>`; });
+        out.push(table + "</tbody></table>");
+      }
+      tableRows = [];
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (/^@@CODEBLOCK\d+@@$/.test(trimmed)) {
+        flushParagraph(); flushList(); flushTable();
+        out.push(trimmed); continue;
+      }
+      if (trimmed.includes("|") && i + 1 < lines.length && /^\s*\|?\s*:?-{3,}/.test(lines[i + 1])) {
+        flushParagraph(); flushList(); flushTable();
+        tableRows.push(trimmed, lines[++i].trim());
+        while (i + 1 < lines.length && lines[i + 1].trim().includes("|")) tableRows.push(lines[++i].trim());
+        flushTable(); continue;
+      }
+      const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+      if (heading) {
+        flushParagraph(); flushList(); flushTable();
+        const level = heading[1].length;
+        out.push(`<h${level}>${inline(heading[2])}</h${level}>`); continue;
+      }
+      if (/^(---+|\*\*\*+|___+)$/.test(trimmed)) {
+        flushParagraph(); flushList(); flushTable(); out.push("<hr>"); continue;
+      }
+      const bullet = trimmed.match(/^[-*+]\s+(.+)$/);
+      const numbered = trimmed.match(/^\d+[.)]\s+(.+)$/);
+      if (bullet || numbered) {
+        flushParagraph(); flushTable();
+        const type = bullet ? "ul" : "ol";
+        if (listType && listType !== type) flushList();
+        listType = type; listItems.push((bullet || numbered)[1]); continue;
+      }
+      if (!trimmed) { flushParagraph(); flushList(); flushTable(); continue; }
+      flushList(); flushTable(); paragraph.push(line);
+    }
+    flushParagraph(); flushList(); flushTable();
+    return out.join("").replace(/@@CODEBLOCK(\d+)@@/g, (_, index) => codeBlocks[Number(index)] || "");
+  }
+  function addMessage(role, text) {
+    $("welcome")?.remove();
+    const row = document.createElement("div");
+    row.className = "message " + role;
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "You" : "✦";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = formatAnswer(text);
+    row.append(avatar, bubble);
+    messages.append(row);
+    messages.scrollTop = messages.scrollHeight;
+    return row;
+  }
+
+  async function connectRepository() {
+    showToast("");
+    let repo;
+    try {
+      repo = normalizeRepo($("repo").value);
+    } catch (error) {
+      showToast(error.message);
+      return;
+    }
+
+    setBusy(true);
+    setStatus(`Connecting to ${repo} and indexing files…`);
+    try {
+      // The backend expects owner/repository, not the full GitHub URL.
+      const data = await api("/URL", { github_url: repo, session_id: sessionId });
+      connected = true;
+      $("repoLabel").textContent = repo;
+      $("question").placeholder = `Ask anything about ${repo}…`;
+      setStatus(data.message || `Connected to ${repo}.`, true);
+      addMessage("assistant", `I've connected to ${repo} and indexed its files. Ask me anything about this codebase.`);
+      $("question").focus();
+    } catch (error) {
+      connected = false;
+      setStatus("Could not connect repository.");
+      showToast(`Connection failed: ${error.message}. Check that FastAPI is running and CORS allows this frontend.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function askQuestion(question) {
+    const q = question.trim();
+    if (!connected || busy || !q) return;
+    showToast("");
+    addMessage("user", q);
+    $("question").value = "";
+    setBusy(true);
+    const pending = addMessage("assistant", "Thinking…");
+    pending.querySelector(".bubble").classList.add("typing");
+
+    try {
+      const data = await api("/Questions", { user_q: q, session_id: sessionId });
+      pending.remove();
+      addMessage("assistant", data.answer ?? "The API returned no answer.");
+    } catch (error) {
+      pending.remove();
+      addMessage("assistant", `I couldn't get an answer: ${error.message}\n\nCheck the backend logs and API connection.`);
+    } finally {
+      setBusy(false);
+      $("question").focus();
+    }
+  }
+
+  $("connect").addEventListener("click", connectRepository);
+  $("repo").addEventListener("keydown", event => {
+    if (event.key === "Enter") connectRepository();
+  });
+  $("chatForm").addEventListener("submit", event => {
+    event.preventDefault();
+    askQuestion($("question").value);
+  });
+  $("question").addEventListener("input", () => {
+    $("send").disabled = busy || !connected || !$("question").value.trim();
+  });
+  document.querySelectorAll("[data-q]").forEach(button => {
+    button.addEventListener("click", () => {
+      if (!connected) {
+        showToast("Connect a GitHub repository first.");
+        return;
+      }
+      askQuestion(button.dataset.q);
+    });
+  });
+</script>
+</body>
+</html>
