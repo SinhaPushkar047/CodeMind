@@ -8,14 +8,15 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_classic.retrievers import EnsembleRetriever
 from fastapi import FastAPI
 import shutil
-import glob
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
+
 load_dotenv()
 
-GITHUB_ACCESS_TOKEN = dotenv_values(".env")["GITHUB_ACCESS_TOKEN"]
+GITHUB_ACCESS_TOKEN = os.getenv("GITHUB_ACCESS_TOKEN")
 
 chat_history={}
 
