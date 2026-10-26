@@ -6,14 +6,49 @@ from dotenv import load_dotenv,dotenv_values
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain_classic.retrievers import EnsembleRetriever
-from IPython.display import display, Markdown
 from fastapi import FastAPI
-
-app=FastAPI()
+import shutil
+import glob
+from contextlib import asynccontextmanager
+from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 GITHUB_ACCESS_TOKEN = dotenv_values(".env")["GITHUB_ACCESS_TOKEN"]
+
+chat_history={}
+
+server_memory={}
+
+#*********************************************clear database************************
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Clear all user-specific chroma directories
+    for path in Path(".").glob("chroma_db_*"):
+        if path.is_dir():
+            shutil.rmtree(path)
+
+    server_memory.clear()
+    chat_history.clear()
+
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:5501",
+        "http://localhost:5501",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #***************************************************DOC LOADER*********************************************
 def load(url:str):
@@ -59,14 +94,13 @@ def retriev(chunks,vector_store):
 
 #************************************************DOC STORE*****************************************************
 
-def store(chunks,model):
-    vector_store=Chroma.from_documents(
+def store(chunks, model, session_id):
+    vector_store = Chroma.from_documents(
         documents=chunks,
         embedding=model,
-        collection_name='CodeMind',
-        persist_directory="./chroma_db"
+        collection_name=f'CodeMind_{session_id}',
+        persist_directory=f"./chroma_db_{session_id}"
     )
-
     return vector_store
 
 
@@ -84,35 +118,42 @@ def context(question,retriever,prompt):
 def hello():
     return 'CODEMIND API WORKING'
 
-
-
-server_memory={}
-
 @app.get('/URL')
-def get_url(github_url:str):
+def get_url(github_url: str, session_id: str):
+    model = NVIDIAEmbeddings(model='nvidia/nemotron-3-embed-1b')
+    user_input = github_url
+    doc_loader = load(user_input)
+    doc_split = split(doc_loader)
+    doc_store = store(doc_split, model, session_id)
+    doc_retriev = retriev(doc_split, doc_store)
+    
+    server_memory[session_id] = doc_retriev
+    chat_history[session_id] = []
+    
+    return {'message': 'Docs retrieved successfully'}
 
-    model=NVIDIAEmbeddings(model='nvidia/nemotron-3-embed-1b')
-
-    user_input=github_url
-
-    doc_loader=load(user_input)
-
-    doc_split=split(doc_loader)
-
-    doc_store=store(doc_split,model)
-
-    doc_retriev=retriev(doc_split,doc_store)
-
-    server_memory['my_retriever'] = doc_retriev
-
-    return {'message':'Docs retrieved successfully'}
 
 @app.get('/Questions')
-def ask(user_q:str):
+def ask(user_q: str, session_id: str):
+    question = user_q
+    retriever = server_memory.get(session_id)
 
-    question=user_q
+    if retriever is None:
+        return {"error": "Connect a GitHub repository first."}
 
-    llm=ChatNVIDIA(model='nvidia/nemotron-3-ultra-550b-a55b',temperature=0.8)
+    llm = ChatNVIDIA(
+        model='nvidia/nemotron-3-ultra-550b-a55b',
+        temperature=0.8
+    )
+
+    docs = retriever.invoke(question)
+    context_text = "\n\n".join(doc.page_content for doc in docs)
+
+    history = chat_history.get(session_id, [])
+    history_text = "\n".join(
+        f"{msg['role']}: {msg['content']}"
+        for msg in history
+    )
 
     prompt = PromptTemplate(
         template="""
@@ -120,16 +161,27 @@ def ask(user_q:str):
         Explain the codebase functionality based on the provided code snippets and their file locations.
         If the context only shows part of the implementation, describe what is clearly visible first, and note what external dependencies or functions are referenced.
 
+        Conversation History:
+        {history}
+
         Code Context:
         {context}
 
         Question: {question}
         """,
-        input_variables=['context', 'question']
+        input_variables=["history", "context", "question"]
     )
 
-    retriever = server_memory.get('my_retriever')
+    final_prompt = prompt.format(
+        history=history_text,
+        context=context_text,
+        question=question
+    )
 
-    answer=llm.invoke(context(question,retriever,prompt)).content
+    answer = llm.invoke(final_prompt).content
 
-    return {'answer':answer}
+    history.append({"role": "user", "content": question})
+    history.append({"role": "assistant", "content": answer})
+    chat_history[session_id] = history
+
+    return {"answer": answer}
