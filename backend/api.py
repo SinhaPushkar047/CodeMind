@@ -57,7 +57,7 @@ def load(url:str):
     loader=GithubFileLoader(
         repo=url,
         access_token=GITHUB_ACCESS_TOKEN,
-        file_filter=None
+        file_filter=lambda file_path: file_path.endswith((".py", ".js", ".jsx", ".ts", ".tsx", ".html",".css", ".json", ".md", ".txt", ".java", ".cpp", ".c"))
     )
 
     docs=loader.load()
